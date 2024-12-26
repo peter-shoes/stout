@@ -98,6 +98,21 @@ compile (const char *source, const char *outpath)
 		    }
 		  break;
 		case TOKEN_DAT:
+		  token = scan_token ();
+		  switch (token.type)
+		    {
+		      case TOKEN_ACC:
+			acc_mem = dat_mem;
+			break;
+		      case TOKEN_DAT:
+			break;
+		      case TOKEN_STOUT:
+			printf("%.4f\n", dat_mem);
+			break;
+		      default:
+			compiler_error ("move target is something other than a register.", token);
+			break;
+		    }
 		case TOKEN_NUM:
 		  float hold = atof(tok_to_str (token));
 		  token = scan_token ();
@@ -120,6 +135,26 @@ compile (const char *source, const char *outpath)
 		/*  This case can also be moved to those registers, but you
 		    need to read it in first.  */
 		case TOKEN_STIN:
+		  token = scan_token ();
+		  char buf[256];
+		  switch (token.type)
+		    {
+		      case TOKEN_ACC:
+			fgets (buf, sizeof (buf), stdin);
+			acc_mem = atof (buf);
+			break;
+		      case TOKEN_DAT:
+			fgets (buf, sizeof (buf), stdin);
+			dat_mem = atof (buf);
+			break;
+		      case TOKEN_STOUT:
+			fgets (buf, sizeof (buf), stdin);
+			printf ("%.4f\n", atof (buf));
+			break;
+		      default:
+			compiler_error ("move target is something other than a register.", token);
+			break;
+		    }
 		  break;
 		default:
 		  compiler_error ("attempting to move something other than a register or constant.", token);
