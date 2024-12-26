@@ -40,6 +40,29 @@ compiler_error (char *msg, token_t token)
   #endif
 }
 
+static int
+math_check ()
+{
+  token_t next_tok = scan_token ();
+  int hold = 0;
+  switch (next_tok.type)
+    {
+      case TOKEN_NUM:
+        hold = atof (tok_to_str (next_tok));
+        break;
+      case TOKEN_ACC:
+        hold = acc_mem;
+        break;
+      case TOKEN_DAT:
+        hold = dat_mem;
+        break;
+      default:
+        compiler_error ("attempting math op on a non-number non-register.", next_tok);
+        break;
+    }
+  return hold;
+}
+
 //TODO: we need something to do jumping to lines
 //Should be noted that jumping can only be done backwards (I think)
 
@@ -58,19 +81,20 @@ compile (const char *source, const char *outpath)
 
       switch (token.type)
 	{
-	  // TODO: set error here if the next token is not a number
 	  case TOKEN_ADD:
-	    acc_mem += atof(tok_to_str (scan_token ()));
+	    acc_mem += math_check ();
 	    break;
 	  case TOKEN_SUB:
-	    acc_mem -= atof(tok_to_str (scan_token ()));
+	    acc_mem -= math_check ();
 	    break;
 	  case TOKEN_MUL:
-	    acc_mem *= atof(tok_to_str (scan_token ()));
+	    acc_mem *= math_check ();
 	    break;
 	  case TOKEN_DIV:
-	    //TODO: Check Divide by zero error
-	    acc_mem /= atof(tok_to_str (scan_token ()));
+            int hold = math_check ();
+	    if (hold == 0)
+              compiler_error ("attempting to divide by zero.", token);
+	    acc_mem /= hold;
 	    break;
 	  // TODO: branch cases here
 	  // TODO: if this is a pos or neg branch, check the store and skip to
